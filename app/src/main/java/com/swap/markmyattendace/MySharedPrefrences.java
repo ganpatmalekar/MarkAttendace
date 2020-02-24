@@ -18,7 +18,6 @@ public class MySharedPrefrences {
     private String KEY_SET_APP_RUN_FIRST_TIME = Constants.APP_RUN_FIRST_TIME;
     private static final String IS_LOGIN = "IS_LOGIN";
     public static final String NAME = "NAME";
-    public static final String FIRST_NAME = "FIRST_NAME";
 
     public MySharedPrefrences(Context context) {
         this.context = context;
@@ -38,10 +37,9 @@ public class MySharedPrefrences {
     }
 
     //create login session
-    public void createSession(String name, String first_name) {
+    public void createSession(String name) {
         editor.putBoolean(IS_LOGIN, true);
         editor.putString(NAME, name);
-        editor.putString(FIRST_NAME, first_name);
         editor.commit();
     }
 
@@ -62,8 +60,6 @@ public class MySharedPrefrences {
     public HashMap<String, String> getUserDetails() {
         HashMap<String, String> user = new HashMap<>();
         user.put(NAME, preferences.getString(NAME, null));
-        user.put(FIRST_NAME, preferences.getString(FIRST_NAME, null));
-
         return user;
     }
 

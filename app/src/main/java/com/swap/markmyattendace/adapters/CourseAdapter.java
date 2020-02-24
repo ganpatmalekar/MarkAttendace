@@ -44,6 +44,11 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseHold
         return courseModelList.size();
     }
 
+    public void clear() {
+        courseModelList.clear();
+        notifyDataSetChanged();
+    }
+
     public class CourseHolder extends RecyclerView.ViewHolder {
         protected TextView tv_code, tv_name;
 

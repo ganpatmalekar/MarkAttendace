@@ -47,21 +47,8 @@ public class Master extends AppCompatActivity {
         toolbar.setTitle(getString(R.string.app_name));
         setSupportActionBar(toolbar);
 
-        Intent intent = getIntent();
-        String getUserType = intent.getStringExtra("USER_TYPE");
-
         prefrences = new MySharedPrefrences(this);
         prefrences.checkLogin();
-        // get logged user name
-        HashMap<String, String> user = prefrences.getUserDetails();
-        loggedUserName = user.get(prefrences.NAME);
-
-//        if (getUserType.equals("Admin")) {
-//            loggedUserName = user.get(prefrences.NAME);
-//        } else {
-//            loggedUserName = user.get(prefrences.FIRST_NAME);
-//        }
-
 
         drawerLayout = (DrawerLayout) this.findViewById(R.id.drawer_layout);
         actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close);
@@ -75,10 +62,14 @@ public class Master extends AppCompatActivity {
         navigationView = (NavigationView) this.findViewById(R.id.navigation_view);
         navigationView.setCheckedItem(R.id.dashboard);
 
+        // get logged user name
+        HashMap<String, String> user = prefrences.getUserDetails();
+        loggedUserName = user.get(prefrences.NAME);
+
         // set logged user name to the header of navigation drawer
         View header = navigationView.getHeaderView(0);
         tvLoggedUser = header.findViewById(R.id.logged_user);
-        tvLoggedUser.setText("Welcome: " + loggedUserName);
+        tvLoggedUser.setText(loggedUserName);
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override

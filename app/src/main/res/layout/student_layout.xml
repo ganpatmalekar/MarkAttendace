@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-
+    android:layout_height="match_parent">
     <androidx.cardview.widget.CardView
-        android:id="@+id/course_card"
+        android:id="@+id/teacher_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
@@ -20,49 +19,39 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <CheckBox
-                android:id="@+id/course_check"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:focusable="false"
-                android:focusableInTouchMode="false"/>
-
             <TextView
-                android:id="@+id/course_code"
+                android:id="@+id/student_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
-                android:layout_toRightOf="@+id/course_check"
-                android:text="Course Code"
+                android:text="Name"
                 android:textColor="@color/colorPrimary"
-                android:textSize="20sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/textCourse"
+                android:id="@+id/textCourses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/course_code"
+                android:layout_below="@+id/student_name"
                 android:layout_marginLeft="10dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginBottom="5dp"
-                android:layout_toRightOf="@+id/course_check"
-                android:text="Course Name:"
-                android:textSize="16sp"
+                android:text="Current Courses:"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/course_name"
+                android:id="@+id/student_courses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/course_code"
+                android:layout_below="@+id/student_name"
                 android:layout_marginLeft="5dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginBottom="5dp"
-                android:layout_toRightOf="@+id/textCourse"
-                android:text="Course"
-                android:textSize="16sp" />
+                android:layout_toRightOf="@+id/textCourses"
+                android:text="Courses"
+                android:textSize="18sp" />
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 </LinearLayout>

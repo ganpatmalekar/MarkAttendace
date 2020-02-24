@@ -35,7 +35,6 @@ public class AddTeacher extends AppCompatActivity {
     private EditText edFirstName, edLastName, edEmail, edContact;
     private RadioGroup radioGroupGender;
 
-    private MySharedPrefrences prefrences;
     private static final String URL_REGISTER_TEACHER = Constants.BASE_SCRIPT_URL + "/register_teacher.php?apicall=signup";
 
     @Override
@@ -49,8 +48,6 @@ public class AddTeacher extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        prefrences = new MySharedPrefrences(this);
 
         edFirstName = findViewById(R.id.t_first_name);
         edLastName = findViewById(R.id.t_last_name);
@@ -109,8 +106,6 @@ public class AddTeacher extends AppCompatActivity {
 
                     if (!jsonObject.getBoolean("error")) {
                         Toast.makeText(AddTeacher.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
-
-                        prefrences.createSession(Master.loggedUserName, first_name);
                     } else {
                         Toast.makeText(AddTeacher.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
                     }

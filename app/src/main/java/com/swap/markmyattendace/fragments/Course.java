@@ -16,11 +16,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -43,6 +45,8 @@ public class Course extends Fragment {
     private RecyclerView.Adapter adapter;
     private List<CourseModel> courseModelList;
     private ProgressDialog progressDialog;
+    private SwipeRefreshLayout refreshLayout;
+    private CourseAdapter courseAdapter;
 
     private static final String URL_DISPLAY_COURSE = Constants.BASE_SCRIPT_URL + "/displayCourse.php";
 
@@ -61,18 +65,28 @@ public class Course extends Fragment {
             }
         });
 
-
         recyclerView = view.findViewById(R.id.course_recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setHasFixedSize(true);
 
         courseModelList = new ArrayList<>();
-        adapter = new CourseAdapter(getContext(), courseModelList);
-        adapter.notifyDataSetChanged();
+        courseAdapter = new CourseAdapter(getContext(), courseModelList);
 
-        LayoutAnimationController controller = AnimationUtils.loadLayoutAnimation(getContext(), R.anim.layout_animation_fall_down);
-        recyclerView.setLayoutAnimation(controller);
-        recyclerView.scheduleLayoutAnimation();
+        refreshLayout = view.findViewById(R.id.swiperefresh);
+        refreshLayout.setColorSchemeColors(
+                getResources().getColor(android.R.color.holo_blue_bright),
+                getResources().getColor(android.R.color.holo_green_light),
+                getResources().getColor(android.R.color.holo_orange_light),
+                getResources().getColor(android.R.color.holo_red_light)
+        );
+
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                displayCourse();
+                refreshLayout.setRefreshing(false);
+            }
+        });
 
         displayCourse();
 
@@ -84,26 +98,28 @@ public class Course extends Fragment {
         progressDialog.setMessage("Please wait");
         progressDialog.show();
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_DISPLAY_COURSE, new Response.Listener<String>() {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, URL_DISPLAY_COURSE, null, new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONObject response) {
+                courseAdapter.clear();
                 progressDialog.dismiss();
                 try {
-                    JSONArray jsonArray = new JSONArray(response);
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        CourseModel courseModel = new CourseModel();
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    if (!response.getBoolean("error")) {
+                        JSONArray jsonArray = response.getJSONArray("data");
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            CourseModel courseModel = new CourseModel();
+                            JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                        courseModel.setCourse_code(jsonObject.getString("c_code"));
-                        courseModel.setCourse_name(jsonObject.getString("c_name"));
+                            courseModel.setCourse_code(jsonObject.getString("c_code"));
+                            courseModel.setCourse_name(jsonObject.getString("c_name"));
 
-                        courseModelList.add(courseModel);
+                            courseModelList.add(courseModel);
+                        }
+                        adapter = new CourseAdapter(getContext(), courseModelList);
+                        recyclerView.setAdapter(adapter);
+                    } else {
+                        Toast.makeText(getContext(), response.getString("data"), Toast.LENGTH_SHORT).show();
                     }
-                    adapter = new CourseAdapter(getContext(), courseModelList);
-                    recyclerView.setAdapter(adapter);
-
-                    adapter.notifyItemRangeChanged(0, adapter.getItemCount());
-                    adapter.notifyDataSetChanged();
                 } catch (JSONException e) {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -116,6 +132,6 @@ public class Course extends Fragment {
             }
         });
         RequestQueue requestQueue = Volley.newRequestQueue(getContext());
-        requestQueue.add(stringRequest);
+        requestQueue.add(request);
     }
 }

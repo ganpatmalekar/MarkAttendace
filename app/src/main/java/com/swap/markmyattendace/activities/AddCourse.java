@@ -19,6 +19,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.swap.markmyattendace.Constants;
@@ -89,7 +90,6 @@ public class AddCourse extends AppCompatActivity {
                 addCourse();
             }
         });
-
     }
 
     // add course
@@ -153,33 +153,38 @@ public class AddCourse extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Fetching Teachers");
         progressDialog.show();
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_POPULATE_TEACHER, new Response.Listener<String>() {
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, URL_POPULATE_TEACHER, null, new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONObject response) {
                 progressDialog.dismiss();
                 try {
-                    JSONArray jsonArray = new JSONArray(response);
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        PopulateTeacherModel model = new PopulateTeacherModel();
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    if (!response.getBoolean("error")) {
+                        JSONArray jsonArray = response.getJSONArray("data");
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            PopulateTeacherModel model = new PopulateTeacherModel();
+                            JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                        model.setFirst_name(jsonObject.getString("t_firstname"));
-                        model.setLast_name(jsonObject.getString("t_lastname"));
+                            model.setFirst_name(jsonObject.getString("t_firstname"));
+                            model.setLast_name(jsonObject.getString("t_lastname"));
 
-                        populateTeacherModelList.add(model);
+                            populateTeacherModelList.add(model);
+                        }
+                        for (int i = 0; i < populateTeacherModelList.size(); i++) {
+                            teachers.add(populateTeacherModelList.get(i).getFirst_name() + " " + populateTeacherModelList.get(i).getLast_name());
+                        }
+                        adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item, teachers);
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+                        adapter.insert("Select Teacher", 0);
+                        spinner.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
+                    } else {
+                        Toast.makeText(AddCourse.this, response.getString("data"), Toast.LENGTH_SHORT).show();
                     }
-                    for (int i = 0; i < populateTeacherModelList.size(); i++) {
-                        teachers.add(populateTeacherModelList.get(i).getFirst_name() + " " + populateTeacherModelList.get(i).getLast_name());
-                    }
-                    adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item, teachers);
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-                    adapter.insert("Select Teacher", 0);
-                    spinner.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
 
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         }, new Response.ErrorListener() {
@@ -190,7 +195,7 @@ public class AddCourse extends AppCompatActivity {
             }
         });
         RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-        requestQueue.add(stringRequest);
+        requestQueue.add(request);
     }
 
     @Override

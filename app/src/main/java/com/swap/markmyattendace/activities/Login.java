@@ -10,10 +10,25 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
+import com.swap.markmyattendace.Constants;
 import com.swap.markmyattendace.MySharedPrefrences;
 import com.swap.markmyattendace.R;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Login extends AppCompatActivity {
 
@@ -23,10 +38,9 @@ public class Login extends AppCompatActivity {
     private Spinner userSpinner;
     private String[] user_list;
     private ArrayAdapter adapter;
-    private String user, pass;
-    private String user_type;
 
     private MySharedPrefrences prefrences;
+    private static final String URL_VALIDATE_LOGIN = Constants.BASE_SCRIPT_URL + "/login.php?apicall=login";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +65,6 @@ public class Login extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 tvError.setText("");
-                user_type = parent.getItemAtPosition(position).toString();
             }
 
             @Override
@@ -63,15 +76,16 @@ public class Login extends AppCompatActivity {
         mbLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                validateForm();
+                validateUser();
             }
         });
     }
 
     // validate login form
-    private void validateForm() {
-        user = edUsername.getText().toString().trim();
-        pass = edPassword.getText().toString().trim();
+    private void validateUser() {
+        final String user = edUsername.getText().toString().trim();
+        final String pass = edPassword.getText().toString().trim();
+        final String user_type = userSpinner.getSelectedItem().toString();
 
         if (user.isEmpty()) {
             edUsername.setError("Username required");
@@ -85,35 +99,44 @@ public class Login extends AppCompatActivity {
         }
         if (userSpinner.getSelectedItem().equals("Select User Type")) {
             tvError.setText("Please, select user!");
-        }
-        if (!user.isEmpty() && !pass.isEmpty()) {
-            if (userSpinner.getSelectedItem().equals("Admin")) {
-                validateAdmin();
-            } else if (userSpinner.getSelectedItem().equals("Teacher")) {
-                validateTeacher();
-            } else if (userSpinner.getSelectedItem().equals("Student")) {
-                validateStudent();
-            }
-        }
-    }
-
-
-    // validate student login credentials
-    private void validateStudent() {
-    }
-
-    // validate teacher login credentials
-    private void validateTeacher() {
-    }
-
-    // validate admin login credentials
-    private void validateAdmin() {
-        if (user.equals("admin") && pass.equals("admin@123")) {
-            prefrences.createSession(user, "");
-            startActivity(new Intent(Login.this, Master.class).putExtra("USER_TYPE", user_type));
-            finish();
         } else {
-            tvError.setText("Wrong credentials! Please try again.");
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_VALIDATE_LOGIN, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONObject jsonObject = new JSONObject(response);
+
+                        if (!jsonObject.getBoolean("error")) {
+                            Toast.makeText(Login.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
+                            prefrences.createSession(user);
+                            startActivity(new Intent(Login.this, Master.class));
+                            finish();
+                        } else {
+                            Toast.makeText(Login.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(Login.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("username", user);
+                    map.put("password", pass);
+                    map.put("type", user_type);
+
+                    return map;
+                }
+            };
+            RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+            requestQueue.add(stringRequest);
         }
     }
 }

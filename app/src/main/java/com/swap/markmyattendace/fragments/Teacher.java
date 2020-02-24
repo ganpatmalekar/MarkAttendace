@@ -16,11 +16,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -44,6 +46,9 @@ public class Teacher extends Fragment {
     private RecyclerView recyclerView;
     private List<TeacherModel> teacherModelList;
     private ProgressDialog progressDialog;
+    private TeacherAdapter teacherAdapter;
+    private SwipeRefreshLayout refreshLayout;
+
     private static final String URL_DISPLAY_TEACHER = Constants.BASE_SCRIPT_URL + "/displayTeacher.php";
 
     @Nullable
@@ -61,11 +66,31 @@ public class Teacher extends Fragment {
             }
         });
 
+        progressDialog = new ProgressDialog(getContext());
+
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setHasFixedSize(true);
 
         teacherModelList = new ArrayList<>();
+        teacherAdapter = new TeacherAdapter(getContext(), teacherModelList);
+
+        refreshLayout = view.findViewById(R.id.swiperefresh_teacher);
+        refreshLayout.setColorSchemeColors(
+                getResources().getColor(android.R.color.holo_blue_bright),
+                getResources().getColor(android.R.color.holo_green_light),
+                getResources().getColor(android.R.color.holo_orange_light),
+                getResources().getColor(android.R.color.holo_red_light)
+        );
+
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                displayTeacher();
+                refreshLayout.setRefreshing(false);
+            }
+        });
+
 
         displayTeacher();
 
@@ -73,30 +98,32 @@ public class Teacher extends Fragment {
     }
 
     private void displayTeacher() {
-        progressDialog = new ProgressDialog(getContext());
         progressDialog.setMessage("Please wait");
         progressDialog.show();
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_DISPLAY_TEACHER, new Response.Listener<String>() {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, URL_DISPLAY_TEACHER, null, new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(String response) {
+            public void onResponse(JSONObject response) {
+                teacherAdapter.clear();
                 progressDialog.dismiss();
                 try {
-                    JSONArray jsonArray = new JSONArray(response);
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        TeacherModel teacherModel = new TeacherModel();
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    if (!response.getBoolean("error")) {
+                        JSONArray jsonArray = response.getJSONArray("data");
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            TeacherModel teacherModel = new TeacherModel();
+                            JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                        teacherModel.setFirst_name(jsonObject.getString("t_firstname"));
-                        teacherModel.setLast_name(jsonObject.getString("t_lastname"));
-                        teacherModel.setContact(jsonObject.getString("t_contact"));
+                            teacherModel.setFirst_name(jsonObject.getString("t_firstname"));
+                            teacherModel.setLast_name(jsonObject.getString("t_lastname"));
+                            teacherModel.setContact(jsonObject.getString("t_contact"));
 
-                        teacherModelList.add(teacherModel);
+                            teacherModelList.add(teacherModel);
+                        }
+                        adapter = new TeacherAdapter(getContext(), teacherModelList);
+                        recyclerView.setAdapter(adapter);
+                    } else {
+                        Toast.makeText(getContext(), response.getString("data"), Toast.LENGTH_SHORT).show();
                     }
-                    adapter = new TeacherAdapter(getContext(), teacherModelList);
-                    recyclerView.setAdapter(adapter);
-                    adapter.notifyItemRangeChanged(0, adapter.getItemCount());
-                    adapter.notifyDataSetChanged();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -109,6 +136,6 @@ public class Teacher extends Fragment {
             }
         });
         RequestQueue requestQueue = Volley.newRequestQueue(getContext());
-        requestQueue.add(stringRequest);
+        requestQueue.add(request);
     }
 }

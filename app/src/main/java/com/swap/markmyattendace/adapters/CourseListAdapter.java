@@ -5,24 +5,37 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.swap.markmyattendace.R;
-import com.swap.markmyattendace.models.CourseModel;
+import com.swap.markmyattendace.models.CourseListModel;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class CourseListAdapter extends RecyclerView.Adapter<CourseListAdapter.CourseListHolder> {
 
     private Context context;
-    private List<CourseModel> courseModelList;
+    private static ArrayList<CourseListModel> courseModelList;
+    private CompoundButton.OnCheckedChangeListener onCheckedChangeListener;
 
-    public CourseListAdapter(Context context, List<CourseModel> courseModelList) {
+    public CourseListAdapter(Context context, final ArrayList<CourseListModel> courseModelList) {
         this.context = context;
         this.courseModelList = courseModelList;
+        onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                CourseListModel model = (CourseListModel) buttonView.getTag();
+                if(isChecked){
+                    model.setStatus("Checked");
+                }else {
+                    model.setStatus("Unchecked");
+                }
+            }
+        };
     }
 
     @NonNull
@@ -33,11 +46,27 @@ public class CourseListAdapter extends RecyclerView.Adapter<CourseListAdapter.Co
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CourseListHolder holder, int position) {
-        CourseModel courseModel = courseModelList.get(position);
+    public void onBindViewHolder(@NonNull final CourseListHolder holder, final int position) {
+        final CourseListModel courseModel = courseModelList.get(position);
 
         holder.tv_code.setText(courseModel.getCourse_code());
         holder.tv_name.setText(courseModel.getCourse_name());
+
+        holder.checkBox.setTag(courseModel);
+        holder.checkBox.setOnCheckedChangeListener(onCheckedChangeListener);
+    }
+
+    // get items on recyclerview
+    public ArrayList<CourseListModel> getItems(){
+        if(courseModelList == null){
+            return new ArrayList<>();
+        }
+        return courseModelList;
+    }
+
+    public void clear() {
+        courseModelList.clear();
+        notifyDataSetChanged();
     }
 
     @Override

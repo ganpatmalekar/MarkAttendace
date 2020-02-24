@@ -45,6 +45,11 @@ public class TeacherAdapter extends RecyclerView.Adapter<TeacherAdapter.TeacherH
         return teacherModelList.size();
     }
 
+    public void clear() {
+        teacherModelList.clear();
+        notifyDataSetChanged();
+    }
+
     public class TeacherHolder extends RecyclerView.ViewHolder {
         protected TextView tv_name, tv_contact;
 
